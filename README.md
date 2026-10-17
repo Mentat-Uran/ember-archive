@@ -25,6 +25,7 @@ npm ci
 npm run dev
 npm test
 npm run build
+npm run verify:build
 ```
 
 技术栈：React 19、Vite、原生 JavaScript 确定性状态引擎、Web Audio。没有服务器业务依赖。`src/engine.js` 独立于 UI，可序列化、重放与测试；`src/content.js` 定义全部游戏内容。UI 兼容桌面与移动端，并提供键盘焦点、减少动态效果与默认静音。
@@ -36,7 +37,7 @@ npm run build
 题干、四个选项、正确答案、材料、原始解析及引用配图随题保存；每题携带对应 commit 的 GitHub 链接。原库疑点、答案不唯一、选项或解析缺失的记录保留为待复核题，可查阅原文，不进入正常战斗或准确率统计。复现导入：
 
 ```bash
-git clone https://github.com/Mentat-Uran/kaogongzhentizhengliu source-vault
+git clone --config core.autocrlf=false https://github.com/Mentat-Uran/kaogongzhentizhengliu source-vault
 git -C source-vault checkout 84ab93d4b64b61d897bece8a1c0a5bab06b4feb2
 node scripts/import-questions.mjs source-vault public
 ```
@@ -47,6 +48,6 @@ node scripts/import-questions.mjs source-vault public
 
 `public/art/` 内每张场景、角色与敌人美术均由内建 Image Generation 独立生成，透明角色保留 alpha。另有 59 张独立秘典封面：15 个敌人、18 件遗物、26 张招式，战斗与商店同步使用。提示词分别记录于 `public/art/prompts.md`、`prompts-enemies.md`、`prompts-relics.md` 和 `prompts-cards.md`。未使用拼图或多角色图集。界面符号使用 Lucide，音效与氛围音乐由 Web Audio 合成，默认关闭。
 
-PNG 原图完整保留在源码的 `public/art/` 中；运行版本使用保留透明度的 WebP 压缩副本，构建时只分发这些网页副本。题库配图保持原始内容。
+PNG 原图完整保留在源码的 `public/art/` 中；运行版本使用保留透明度的 WebP 压缩副本，构建时只分发这些网页副本。500 张较大的原题配图另有无损 WebP 缓存，生成时逐张比对解码 RGBA 像素完全相等，原图仍完整保留在 `public/question-images/`。缓存及哈希记录在 `assets/question-images/`，构建仅需 Node.js；需要重建缓存时可使用安装了 Pillow 的 Python 运行 `scripts/optimize-question-images.py`。`verify:build` 校验发布版全部题目记录还原后与原始数据逐字段相同、配图全部存在，并检查部署体积。
 
 网站版本使用 Sites 私有托管；本地源码仍可独立构建和运行。
