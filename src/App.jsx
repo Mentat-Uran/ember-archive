@@ -6,6 +6,7 @@ import * as Engine from './engine.js';
 import {CLASSES,CARDS,RELICS,ENEMIES,UPGRADES,ACHIEVEMENTS,STANCES} from './content.js';
 import {setAudio,sfx} from './audio.js';
 import {loadSnapshot,saveSnapshot} from './storage.js';
+import {decodeQuestionData} from './data-codec.js';
 
 const LibraryView=React.lazy(()=>import('./Learning.jsx').then(m=>({default:m.LibraryView})));
 const StatsView=React.lazy(()=>import('./Learning.jsx').then(m=>({default:m.StatsView})));
@@ -45,7 +46,7 @@ export default function App(){
  const qIndex=useMemo(()=>new Map(questions.map(q=>[q.id,q])),[questions]);
  const categories=useMemo(()=>[...new Set(questions.map(q=>q.category))].sort(),[questions]);
  const notify=t=>{setToast(t);clearTimeout(timer.current);timer.current=setTimeout(()=>setToast(''),3500);};
- useEffect(()=>{let live=true;const get=async url=>{const r=await fetch(url);if(!r.ok)throw Error(`题库载入失败（${r.status}），请刷新重试。`);return r.json();};(async()=>{const m=await get('/data/manifest.json').catch(()=>null);if(live)setManifest(m);let files=m?.questionFiles;let index;if(!files?.length){index=await get('/data/questions.json');if(Array.isArray(index)){if(live)setQuestions(index);return;}files=index.files;}if(!files?.length)throw Error('题库索引尚未就绪，请刷新重试。');const all=[];for(let i=0;i<files.length;i+=4){const parts=await Promise.all(files.slice(i,i+4).map(get));all.push(...parts.flatMap(p=>Array.isArray(p)?p:p.questions||[]));if(!live)return;}if(live){setQuestions(all);setLoadError('');}})().catch(e=>{if(live)setLoadError(e.message);});return()=>{live=false;};},[]);
+ useEffect(()=>{let live=true;const get=async url=>{const r=await fetch(url);if(!r.ok)throw Error(`题库载入失败（${r.status}），请刷新重试。`);return url.endsWith('.gz')?decodeQuestionData(await r.arrayBuffer()):r.json();};(async()=>{const m=await get('/data/manifest.json').catch(()=>null);if(live)setManifest(m);let files=m?.questionFiles;let index;if(!files?.length){index=await get('/data/questions.json');if(Array.isArray(index)){if(live)setQuestions(index);return;}files=index.files;}if(!files?.length)throw Error('题库索引尚未就绪，请刷新重试。');const all=[];for(let i=0;i<files.length;i+=4){const parts=await Promise.all(files.slice(i,i+4).map(get));all.push(...parts.flatMap(p=>Array.isArray(p)?p:p.questions||[]));if(!live)return;}if(live){setQuestions(all);setLoadError('');}})().catch(e=>{if(live)setLoadError(e.message);});return()=>{live=false;};},[]);
  useEffect(()=>{let alive=true;loadSnapshot(initial.current).then(data=>{if(!alive)return;if(data){setProfile(data.profile);setRun(data.run||null);setSettings(data.settings||{sound:false,motion:true});setLearning(data.learning||{});setStudyLog(data.studyLog||[]);}setStorageReady(true);});return()=>{alive=false;};},[]);
  useEffect(()=>{if(!storageReady)return;saveSnapshot({version:1,profile,run,settings,learning,studyLog}).then(ok=>{if(!ok)notify('设备储存空间不足，请导出存档备份。');});},[storageReady,profile,run,settings,learning,studyLog]);
  useEffect(()=>{setAudio(settings.sound);document.documentElement.dataset.motion=settings.motion?'on':'off';},[settings]);

@@ -10,7 +10,7 @@ root=Path(__file__).resolve().parents[1]
 originals=root/'public'/'question-images'
 cache=root/'assets'/'question-images'
 cache.mkdir(parents=True,exist_ok=True)
-files=sorted(originals.rglob('*.png'),key=lambda p:p.stat().st_size,reverse=True)[:500]
+files=sorted(originals.rglob('*.png'),key=lambda p:p.stat().st_size,reverse=True)[:5000]
 
 def optimize(src):
     raw=src.read_bytes()

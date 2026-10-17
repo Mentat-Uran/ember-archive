@@ -48,6 +48,8 @@ node scripts/import-questions.mjs source-vault public
 
 `public/art/` 内每张场景、角色与敌人美术均由内建 Image Generation 独立生成，透明角色保留 alpha。另有 59 张独立秘典封面：15 个敌人、18 件遗物、26 张招式，战斗与商店同步使用。提示词分别记录于 `public/art/prompts.md`、`prompts-enemies.md`、`prompts-relics.md` 和 `prompts-cards.md`。未使用拼图或多角色图集。界面符号使用 Lucide，音效与氛围音乐由 Web Audio 合成，默认关闭。
 
-PNG 原图完整保留在源码的 `public/art/` 中；运行版本使用保留透明度的 WebP 压缩副本，构建时只分发这些网页副本。500 张较大的原题配图另有无损 WebP 缓存，生成时逐张比对解码 RGBA 像素完全相等，原图仍完整保留在 `public/question-images/`。缓存及哈希记录在 `assets/question-images/`，构建仅需 Node.js；需要重建缓存时可使用安装了 Pillow 的 Python 运行 `scripts/optimize-question-images.py`。`verify:build` 校验发布版全部题目记录还原后与原始数据逐字段相同、配图全部存在，并检查部署体积。
+PNG 原图完整保留在源码的 `public/art/` 中；运行版本使用保留透明度的 WebP 压缩副本，构建时只分发这些网页副本。4,566 张较大的原题配图另有无损 WebP 缓存，生成时逐张比对解码 RGBA 像素完全相等，原图仍完整保留在 `public/question-images/`。缓存及哈希记录在 `assets/question-images/`，构建仅需 Node.js；需要重建缓存时可使用安装了 Pillow 的 Python 运行 `scripts/optimize-question-images.py`。`verify:build` 校验发布版全部题目记录还原后与原始数据逐字段相同、配图全部存在，并检查部署体积。
 
 网站版本使用 Sites 私有托管；本地源码仍可独立构建和运行。
+
+发布版题库分片使用 gzip 传输，浏览器自动还原完整 JSON；开发版与原始数据仍保留普通 JSON。
