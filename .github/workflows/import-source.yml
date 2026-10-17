@@ -1,0 +1,156 @@
+name: Verify and stage source bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+      bundle_asset_ids:
+        description: Comma-separated private Release asset IDs, in bundle-part order
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  stage-source-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify bundle and stage pinned source commit
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUNDLE_ASSET_IDS: ${{ inputs.bundle_asset_ids }}
+          GITHUB_REMOTE: https://github.com/${{ github.repository }}.git
+          EXPECTED_SOURCE_SHA: b993b2c3eaa54c8339cc0db790bc04a307233e9f
+          SOURCE_REF: refs/heads/source-import-b993b2c3
+          EXPECTED_BUNDLE_BYTES: '389659286'
+          EXPECTED_BUNDLE_SHA256: 5209be29bf75bdcf142601a0f36a71f7e236741f62b8132ca43759bb2de2b08b
+        run: |
+          set -euo pipefail
+          set +x
+          unset GIT_TRACE GIT_TRACE_CURL GIT_CURL_VERBOSE GIT_TRACE_PACKET GIT_TRACE2_EVENT
+
+          if [[ -z "${GH_TOKEN:-}" || ! "${BUNDLE_ASSET_IDS:-}" =~ ^[0-9]+(,[0-9]+)*$ ]]; then
+            printf '%s\n' 'Required workflow input or GitHub token is unavailable.' >&2
+            exit 1
+          fi
+          asset_count="$(awk -F, '{print NF}' <<<"$BUNDLE_ASSET_IDS")"
+          if (( asset_count > 100 )); then
+            printf '%s\n' 'At most 100 bundle asset IDs may be provided.' >&2
+            exit 1
+          fi
+          if [[ ! "$EXPECTED_BUNDLE_SHA256" =~ ^[0-9a-fA-F]{64}$ ]]; then
+            printf '%s\n' 'Expected bundle SHA-256 has not been configured.' >&2
+            exit 1
+          fi
+
+          temp_root="$(mktemp -d "${RUNNER_TEMP:-/tmp}/bundle-import.XXXXXX")"
+          trap 'rm -rf "$temp_root"' EXIT
+          bundle_path="$temp_root/source.bundle"
+          verify_repo="$temp_root/verify.git"
+          source_repo="$temp_root/source.git"
+
+          if ! python3 - "$temp_root" "$GITHUB_REPOSITORY" "$BUNDLE_ASSET_IDS" "$bundle_path" "$EXPECTED_BUNDLE_BYTES" "$EXPECTED_BUNDLE_SHA256" <<'PY'
+          import concurrent.futures
+          import hashlib
+          import pathlib
+          import subprocess
+          import sys
+          import time
+
+          temp_root, repository, raw_ids, bundle_file, expected_size, expected_digest = sys.argv[1:]
+          asset_ids = raw_ids.split(',')
+          root = pathlib.Path(temp_root)
+
+          def download(item):
+              index, asset_id = item
+              part = root / f'part{index:03d}'
+              command = [
+                  'gh', 'api', '-H', 'Accept: application/octet-stream',
+                  f'/repos/{repository}/releases/assets/{asset_id}',
+              ]
+              for attempt in range(3):
+                  try:
+                      with part.open('wb') as output:
+                          result = subprocess.run(command, stdout=output, stderr=subprocess.DEVNULL, check=False)
+                      if result.returncode == 0 and part.stat().st_size > 0:
+                          return part
+                  except OSError:
+                      pass
+                  part.unlink(missing_ok=True)
+                  if attempt < 2:
+                      time.sleep(1 << attempt)
+              raise RuntimeError(f'asset part {index:03d} download failed')
+
+          try:
+              with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+                  parts = list(pool.map(download, enumerate(asset_ids, start=1)))
+              digest = hashlib.sha256()
+              total = 0
+              with open(bundle_file, 'wb') as bundle:
+                  for part in parts:
+                      with part.open('rb') as source:
+                          while True:
+                              chunk = source.read(1024 * 1024)
+                              if not chunk:
+                                  break
+                              bundle.write(chunk)
+                              digest.update(chunk)
+                              total += len(chunk)
+              if total != int(expected_size):
+                  raise RuntimeError('combined bundle byte count mismatch')
+              if digest.hexdigest().lower() != expected_digest.lower():
+                  raise RuntimeError('combined bundle SHA-256 mismatch')
+          except Exception as error:
+              print(str(error), file=sys.stderr)
+              sys.exit(1)
+          PY
+          then
+            printf '%s\n' 'Could not assemble and verify the bundle asset parts.' >&2
+            exit 1
+          fi
+          git init --quiet --bare "$verify_repo"
+          if ! git -C "$verify_repo" bundle verify "$bundle_path" >/dev/null 2>&1; then
+            printf '%s\n' 'Downloaded asset is not a complete Git bundle.' >&2
+            exit 1
+          fi
+          if ! git clone --quiet --bare "$bundle_path" "$source_repo" >/dev/null 2>&1; then
+            printf '%s\n' 'Could not open the Git bundle.' >&2
+            exit 1
+          fi
+          source_sha="$(git -C "$source_repo" rev-parse --verify "${EXPECTED_SOURCE_SHA}^{commit}")"
+          if [[ "$source_sha" != "$EXPECTED_SOURCE_SHA" ]]; then
+            printf '%s\n' 'Bundle does not contain the pinned source commit.' >&2
+            exit 1
+          fi
+          if [[ -e "$source_repo/shallow" ]]; then
+            printf '%s\n' 'Bundle history was unexpectedly shallow.' >&2
+            exit 1
+          fi
+          source_tree="$(git -C "$source_repo" rev-parse --verify "${source_sha}^{tree}")"
+
+          github_basic="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
+          github_auth_header="Authorization: Basic $github_basic"
+          github_git() {
+            GIT_CONFIG_NOSYSTEM=1 \
+            GIT_CONFIG_GLOBAL=/dev/null \
+            GIT_CONFIG_COUNT=2 \
+            GIT_CONFIG_KEY_0=http.extraheader \
+            GIT_CONFIG_VALUE_0='' \
+            GIT_CONFIG_KEY_1=http.extraheader \
+            GIT_CONFIG_VALUE_1="$github_auth_header" \
+              git -C "$source_repo" "$@"
+          }
+
+          if ! github_git push --porcelain "$GITHUB_REMOTE" "$source_sha:$SOURCE_REF" >/dev/null 2>&1; then
+            printf '%s\n' 'Normal push of the verified source commit to its staging branch failed.' >&2
+            exit 1
+          fi
+          published_sha="$(github_git ls-remote --refs "$GITHUB_REMOTE" "$SOURCE_REF" 2>/dev/null | awk 'NR == 1 { print $1 }')"
+          if [[ "$published_sha" != "$source_sha" ]]; then
+            printf '%s\n' 'Staging branch did not resolve to the pinned source commit.' >&2
+            exit 1
+          fi
+
+          printf 'sourceSHA=%s\nsourceTreeSHA=%s\n' "$source_sha" "$source_tree"
