@@ -1,0 +1,605 @@
+[
+  {
+    "path": "hollow.png",
+    "width": 1024,
+    "height": 1536,
+    "bytes": 1570956,
+    "webpBytes": 137906,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "keeper.png",
+    "width": 1024,
+    "height": 1536,
+    "bytes": 1575902,
+    "webpBytes": 129760,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "knight.png",
+    "width": 1024,
+    "height": 1536,
+    "bytes": 1445641,
+    "webpBytes": 113206,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "ruins.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 1562969,
+    "webpBytes": 25932,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "seer.png",
+    "width": 1024,
+    "height": 1536,
+    "bytes": 1571196,
+    "webpBytes": 111520,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "sentinel.png",
+    "width": 1225,
+    "height": 1284,
+    "bytes": 1220936,
+    "webpBytes": 148468,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "warden.png",
+    "width": 1220,
+    "height": 1289,
+    "bytes": 1554556,
+    "webpBytes": 242968,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "wraith.png",
+    "width": 1024,
+    "height": 1536,
+    "bytes": 1515835,
+    "webpBytes": 120890,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "cards\\annotate.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 2370551,
+    "webpBytes": 198192,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\breath.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 2061367,
+    "webpBytes": 76752,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\burning_barrier.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 2085567,
+    "webpBytes": 147074,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\burning_glyph.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1675900,
+    "webpBytes": 58674,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\calm_mind.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1253653,
+    "webpBytes": 36738,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\chain_reason.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1884046,
+    "webpBytes": 57118,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\combo_surge.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1552651,
+    "webpBytes": 42864,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\counterproof.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1915419,
+    "webpBytes": 101254,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\echo_page.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1903391,
+    "webpBytes": 67304,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\ember_script.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1939479,
+    "webpBytes": 83166,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\expose_flaw.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1927176,
+    "webpBytes": 129776,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\forecast.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 2241343,
+    "webpBytes": 161758,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\grand_thesis.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1574785,
+    "webpBytes": 30152,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\ink_wave.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1620510,
+    "webpBytes": 61920,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\iron_page.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 2114867,
+    "webpBytes": 137916,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\keen_eye.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 2678319,
+    "webpBytes": 238222,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\last_page.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1862395,
+    "webpBytes": 80612,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\perfect_stride.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 2368811,
+    "webpBytes": 191604,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\piercing_line.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1374722,
+    "webpBytes": 34044,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\quick_calc.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1928475,
+    "webpBytes": 57106,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\ratio.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1860388,
+    "webpBytes": 72442,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\read_ahead.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1308431,
+    "webpBytes": 43292,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\redline.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 2618332,
+    "webpBytes": 231026,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\steady_hand.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 2305604,
+    "webpBytes": 174986,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\swift_notation.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1398312,
+    "webpBytes": 53862,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "cards\\warding_seal.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 2014069,
+    "webpBytes": 107646,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "enemies\\archive_guard.png",
+    "width": 1312,
+    "height": 1199,
+    "bytes": 2387178,
+    "webpBytes": 405902,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "enemies\\book_golem.png",
+    "width": 1213,
+    "height": 1296,
+    "bytes": 1631240,
+    "webpBytes": 256448,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "enemies\\dust_sprite.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 1861593,
+    "webpBytes": 224386,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "enemies\\examiner.png",
+    "width": 1024,
+    "height": 1536,
+    "bytes": 1868796,
+    "webpBytes": 186722,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "enemies\\exam_wraith.png",
+    "width": 1024,
+    "height": 1536,
+    "bytes": 1387755,
+    "webpBytes": 113500,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "enemies\\four_seals.png",
+    "width": 1211,
+    "height": 1299,
+    "bytes": 2231529,
+    "webpBytes": 302134,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "enemies\\gatekeeper.png",
+    "width": 1024,
+    "height": 1536,
+    "bytes": 2175644,
+    "webpBytes": 223064,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "enemies\\heavenly_exam.png",
+    "width": 1024,
+    "height": 1536,
+    "bytes": 1918025,
+    "webpBytes": 190596,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "enemies\\ink_bandit.png",
+    "width": 1024,
+    "height": 1536,
+    "bytes": 2108857,
+    "webpBytes": 267570,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "enemies\\logic_beast.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 1380386,
+    "webpBytes": 105148,
+    "alpha": true,
+    "cornerAlpha": 2
+  },
+  {
+    "path": "enemies\\mirror_scholar.png",
+    "width": 1312,
+    "height": 1199,
+    "bytes": 970604,
+    "webpBytes": 150652,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "enemies\\number_eater.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 1559180,
+    "webpBytes": 165514,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "enemies\\paper_tiger.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2219614,
+    "webpBytes": 226662,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "enemies\\red_paper_demon.png",
+    "width": 1024,
+    "height": 1536,
+    "bytes": 2248796,
+    "webpBytes": 284286,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "enemies\\void_librarian.png",
+    "width": 1024,
+    "height": 1536,
+    "bytes": 1636769,
+    "webpBytes": 139670,
+    "alpha": true,
+    "cornerAlpha": 0
+  },
+  {
+    "path": "relics\\astrolabe.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1748589,
+    "webpBytes": 56756,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\bronze_abacus.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1712700,
+    "webpBytes": 37444,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\bronze_mirror.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1677907,
+    "webpBytes": 36690,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\cinnabar_seal.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1688350,
+    "webpBytes": 53494,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\cracked_seal.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1805286,
+    "webpBytes": 80880,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\ember_bead.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1510018,
+    "webpBytes": 28252,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\golden_thread.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1843275,
+    "webpBytes": 49322,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\inkstone.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1771322,
+    "webpBytes": 58730,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\ink_dragon.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1510941,
+    "webpBytes": 43738,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\iron_bookmark.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1307265,
+    "webpBytes": 31136,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\jade_bead.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1669975,
+    "webpBytes": 34950,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\lucky_coin.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1906032,
+    "webpBytes": 155636,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\paper_crane.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1514371,
+    "webpBytes": 67048,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\phoenix_ash.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1692486,
+    "webpBytes": 31680,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\quiet_bell.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1965991,
+    "webpBytes": 110486,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\red_tassel.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1602902,
+    "webpBytes": 31678,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\scroll_case.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1725262,
+    "webpBytes": 43284,
+    "alpha": false,
+    "cornerAlpha": null
+  },
+  {
+    "path": "relics\\warm_lamp.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1627260,
+    "webpBytes": 33162,
+    "alpha": false,
+    "cornerAlpha": null
+  }
+]
