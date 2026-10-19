@@ -48,8 +48,12 @@ const answerMatches=(q,selected)=>{const expected=answerIndices(q),actual=[...ne
 function ReviewPanel({q,onImage}){
  const r=q?.review;if(!r)return null;
  const status=reviewStatusNames[r.status]||'复核记录';
+ const originalPrompt=r.originalPrompt;
+ const originalStatus=originalPrompt?(reviewStatusNames[originalPrompt.status]||'原题待复核'):'';
+ const originalAnswer=originalPrompt?.answer||'';
+ const originalScoreability=originalPrompt?.usable===true?`原题可计分${originalAnswer?`（答案${originalAnswer}）`:''}。`:'原题不参与计分。';
  const evidence=typeof r.evidence==='string'?r.evidence:JSON.stringify(r.evidence,null,2);
- return <section className="review-explanation"><h4>独立复核 · {status}</h4><Markdown text={r.correctedExplanation} onImage={onImage}/>{r.acceptedAnswers?.length>1&&<p><strong>可成立选项：</strong>{r.acceptedAnswers.join('、')}</p>}{r.relatedInfo&&<p><strong>相关信息：</strong>{r.relatedInfo}</p>}<details><summary>核对依据</summary><pre className="review-evidence">{evidence}</pre></details></section>;
+ return <section className="review-explanation"><h4>独立复核 · {status}{r.activeVersion==='editorial'?' · 编辑版计分':''}</h4>{r.activeVersion==='editorial'&&originalPrompt&&<p><strong>原题状态：</strong>{originalStatus}，{originalScoreability}{originalPrompt.reportedAnswers?.length?` 来源中曾记录的答案键或竞争项：${originalPrompt.reportedAnswers.join('、')}。`:''}</p>}<Markdown text={r.correctedExplanation} onImage={onImage}/>{r.acceptedAnswers?.length>1&&<p><strong>可成立选项：</strong>{r.acceptedAnswers.join('、')}</p>}{r.relatedInfo&&<p><strong>相关信息：</strong>{r.relatedInfo}</p>}<details><summary>核对依据</summary><pre className="review-evidence">{evidence}</pre></details></section>;
 }
 
 function upgradedDescription(c){const boost=k=>(c[k]||0)+Math.max(1,Math.floor((c[k]||0)*.3));const parts=[];if(c.damage)parts.push(`${c.aoe?'对所有敌人':'对目标'}造成${boost('damage')+2}点伤害`);if(c.repeatOnCombo)parts.push('连击时再次触发伤害');if(c.comboDamage)parts.push('每层连击额外+1伤害，最多+4');if(c.block)parts.push(`获得${boost('block')+2}点护甲`);if(c.burn)parts.push(`施加${boost('burn')}层灼烧`);if(c.vulnerable)parts.push(`易伤${c.vulnerable+1}回合`);if(c.draw)parts.push(`抽${c.draw+1}张牌`);if(c.energy)parts.push(`获得${c.energy}专注`);if(c.heal)parts.push(`恢复${c.heal+2}点生命`);if(c.selfDamage)parts.push(`损失${c.selfDamage}生命`);if(c.nextDraw)parts.push(`下回合多抽${c.nextDraw}张`);if(c.retrieve)parts.push('取回弃牌堆最上方的牌');if(c.cleanse)parts.push('清除自身虚弱');if(c.conditionLowHp)parts.push('半血以下0费');return parts.join('；')+'。';}
@@ -82,7 +86,40 @@ export default function App(){
  const qIndex=useMemo(()=>new Map(questions.map(q=>[q.id,q])),[questions]);
  const categories=useMemo(()=>[...new Set(questions.map(q=>q.category))].sort(),[questions]);
  const notify=t=>{setToast(t);clearTimeout(timer.current);timer.current=setTimeout(()=>setToast(''),3500);};
- useEffect(()=>{let live=true;const get=async url=>{const r=await fetch(url);if(!r.ok)throw Error('题库载入失败（'+r.status+'），请刷新重试。');return url.endsWith('.gz')?decodeQuestionData(await r.arrayBuffer()):r.json();};(async()=>{const m=await get('/data/manifest.json').catch(()=>null);if(live)setManifest(m);let files=m?.questionFiles;let index;if(!files?.length){index=await get('/data/questions.json');if(Array.isArray(index)){const reviews=m?.answerReviewFile?await get(m.answerReviewFile):[];if(live)setQuestions(applyQuestionReviews(index,reviews));return;}files=index.files;}if(!files?.length)throw Error('题库索引尚未就绪，请刷新重试。');const all=[];for(let i=0;i<files.length;i+=4){const parts=await Promise.all(files.slice(i,i+4).map(get));all.push(...parts.flatMap(p=>Array.isArray(p)?p:p.questions||[]));if(!live)return;}const reviews=m?.answerReviewFile?await get(m.answerReviewFile):[];if(live){setQuestions(applyQuestionReviews(all,reviews));setLoadError('');}})().catch(e=>{if(live)setLoadError(e.message);});return()=>{live=false;};},[]);
+ useEffect(()=>{
+  let live=true;
+  const get=async url=>{const r=await fetch(url);if(!r.ok)throw Error('题库载入失败（'+r.status+'），请刷新重试。');return url.endsWith('.gz')?decodeQuestionData(await r.arrayBuffer()):r.json();};
+  (async()=>{
+   const m=await get('/data/manifest.json');
+   if(!m?.answerReviewFile||!Number.isSafeInteger(m.counts?.reviewed)||m.counts.reviewed<0||!Number.isSafeInteger(m.counts?.total)||m.counts.total<0||!/^[0-9a-f]{64}$/.test(m.answerReviewSha256||''))throw Error('题库清单或答案复核校验摘要不可用，拒绝载入可能过期的数据。');
+   if(!window.crypto?.subtle)throw Error('当前浏览器不支持复核数据完整性校验，请通过 HTTPS 或 localhost 打开。');
+   const reviewResponse=await fetch(m.answerReviewFile);
+   if(!reviewResponse.ok)throw Error('答案复核清单载入失败（'+reviewResponse.status+'）。');
+   const reviewBytes=await reviewResponse.arrayBuffer();
+   const reviewSha256=[...new Uint8Array(await window.crypto.subtle.digest('SHA-256',reviewBytes))].map(x=>x.toString(16).padStart(2,'0')).join('');
+   if(reviewSha256!==m.answerReviewSha256)throw Error('答案复核清单与题库版本不符，拒绝载入可能过期的答案。');
+   const reviews=JSON.parse(new TextDecoder().decode(reviewBytes));
+   if(!Array.isArray(reviews)||reviews.length!==m.counts.reviewed)throw Error('答案复核清单数量与题库清单不符，拒绝载入可能过期的答案。');
+   const reviewIds=new Set();
+   for(const review of reviews){const id=String(review?.id??'');if(!review||typeof review!=='object'||Array.isArray(review)||!/^\d{4,}$/.test(id)||reviewIds.has(id))throw Error('答案复核清单含无效或重复题号，拒绝载入可能过期的答案。');reviewIds.add(id);}
+   const applyReviews=questions=>{
+    if(!Array.isArray(questions)||questions.length!==m.counts.total)throw Error('题库题目数量与清单不符，拒绝载入不完整题库。');
+    const questionIds=new Set();
+    for(const question of questions){const id=String(question?.sourceId??question?.id??'');if(!id||questionIds.has(id))throw Error('题库含缺失或重复题号，拒绝载入不完整题库。');questionIds.add(id);}
+    for(const id of reviewIds)if(!questionIds.has(id))throw Error('答案复核清单与题库题号不一致，拒绝载入可能过期的答案。');
+    return applyQuestionReviews(questions,reviews);
+   };
+   if(live)setManifest(m);
+   let files=m.questionFiles,index;
+   if(files!==undefined&&!Array.isArray(files))throw Error('题库分片清单格式错误。');
+   if(!files?.length){index=await get('/data/questions.json');if(Array.isArray(index)){if(live)setQuestions(applyReviews(index));return;}files=index.files;}
+   if(!Array.isArray(files)||!files.length)throw Error('题库索引尚未就绪，请刷新重试。');
+   const all=[];
+   for(let i=0;i<files.length;i+=4){const parts=await Promise.all(files.slice(i,i+4).map(get));all.push(...parts.flatMap(p=>Array.isArray(p)?p:p.questions||[]));if(!live)return;}
+   if(live){setQuestions(applyReviews(all));setLoadError('');}
+  })().catch(e=>{if(live)setLoadError(e.message);});
+  return()=>{live=false;};
+ },[]);
  useEffect(()=>{let alive=true;loadSnapshot(initial.current).then(data=>{if(!alive)return;if(data){setProfile(data.profile);setRun(data.run||null);setSettings(data.settings||{sound:false,motion:true});setLearning(data.learning||{});setStudyLog(data.studyLog||[]);}setStorageReady(true);});return()=>{alive=false;};},[]);
  useEffect(()=>{if(!storageReady)return;saveSnapshot({version:1,profile,run,settings,learning,studyLog}).then(ok=>{if(!ok)notify('设备储存空间不足，请导出存档备份。');});},[storageReady,profile,run,settings,learning,studyLog]);
  useEffect(()=>{setAudio(settings.sound);document.documentElement.dataset.motion=settings.motion?'on':'off';},[settings]);

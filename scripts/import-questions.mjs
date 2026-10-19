@@ -22,10 +22,10 @@ const questionContentCommit = '84ab93d4b64b61d897bece8a1c0a5bab06b4feb2';
 const pinnedCommit = '84ab93d4b64b61d897bece8a1c0a5bab06b4feb2';
 const sourceReviewCommit = (process.env.SOURCE_REVIEW_COMMIT ?? '').toLowerCase();
 if (sourceReviewCommit && !/^[0-9a-f]{40}$/.test(sourceReviewCommit)) throw new Error('SOURCE_REVIEW_COMMIT must be a full 40-character Git commit SHA.');
-const fullSourceIndexPath = fs.existsSync(path.join(projectRoot, 'public/data/source-index.json')) ? path.join(projectRoot, 'public/data/source-index.json') : path.join(workspace, 'work/all-question-paths.json');
+const fullSourceIndexPath = [path.join(projectRoot, 'public/data/source-index.json'), path.join(workspace, 'ember-data/source-index.json'), path.join(workspace, 'work/all-question-paths.json')].find((candidate) => fs.existsSync(candidate)) ?? path.join(projectRoot, 'public/data/source-index.json');
 const sourceIndex = fs.existsSync(fullSourceIndexPath) ? JSON.parse(fs.readFileSync(fullSourceIndexPath, 'utf8')) : [];
 const sourceMetaByPath = new Map(sourceIndex.map((entry) => [entry.path, entry]));
-const fullSourceMaterialIndexPath = fs.existsSync(path.join(projectRoot, 'public/data/source-material-index.json')) ? path.join(projectRoot, 'public/data/source-material-index.json') : path.join(workspace, 'work/source-material-index.json');
+const fullSourceMaterialIndexPath = [path.join(projectRoot, 'public/data/source-material-index.json'), path.join(workspace, 'ember-data/source-material-index.json'), path.join(workspace, 'work/source-material-index.json')].find((candidate) => fs.existsSync(candidate)) ?? path.join(projectRoot, 'public/data/source-material-index.json');
 const sourceMaterialIndex = fs.existsSync(fullSourceMaterialIndexPath) ? JSON.parse(fs.readFileSync(fullSourceMaterialIndexPath, 'utf8')) : [];
 const sourceMaterialMetaByPath = new Map(sourceMaterialIndex.map((entry) => [entry.path, entry]));
 const missingSourceImages = new Set();
@@ -229,15 +229,111 @@ if (unindexedFiles.length) throw new Error(`Source index is missing ${unindexedF
 const indexedMaterialPaths = new Set(sourceMaterialIndex.map((entry) => entry.path));
 const unindexedMaterials = sourceMaterialFiles.map(relSource).filter((rel) => !indexedMaterialPaths.has(rel));
 if (unindexedMaterials.length) throw new Error(`Source material index is missing ${unindexedMaterials.length} paths. Refusing to overwrite output.`);
+const reviewPath = path.join(sourceRoot, '31-复核记录', '复核记录.jsonl');
+const reviewRecords = fs.existsSync(reviewPath)
+  ? fs.readFileSync(reviewPath, 'utf8').split(/\r?\n/).filter((line) => line.trim()).map((line) => JSON.parse(line))
+  : [];
+const reviewsById = new Map();
+const reviewsBySourcePath = new Map();
+const reviewedMaterialsByPath = new Map();
+for (const record of reviewRecords) {
+  const id = String(record.id ?? '');
+  if (!/^\d{4,}$/.test(id)) throw new Error(`Invalid review record ID: ${id || '(empty)'}`);
+  if (reviewsById.has(id)) throw new Error(`Duplicate review record ID: ${id}`);
+  reviewsById.set(id, record);
+  const sourcePath = record.evidence?.sourcePath;
+  const evidence = record.evidence ?? {};
+  const sourceMeta = typeof sourcePath === 'string' ? sourceMetaByPath.get(sourcePath) : null;
+  if (evidence.repository !== 'Mentat-Uran/kaogongzhentizhengliu'
+    || evidence.questionContentCommit !== questionContentCommit
+    || record.sourceQuestionCommit !== questionContentCommit
+    || record.sourcePath !== sourcePath
+    || !sourceMeta
+    || evidence.sourceBlobSha !== sourceMeta.sha
+    || evidence.sourceSize !== sourceMeta.size
+    || record.sourceBlobSha !== sourceMeta.sha) {
+    throw new Error(`Review record does not match its fixed source-question blob: ${id}. Refusing to overwrite output.`);
+  }
+  if (typeof sourcePath === 'string') {
+    if (reviewsBySourcePath.has(sourcePath)) throw new Error(`Duplicate review source path: ${sourcePath}`);
+    reviewsBySourcePath.set(sourcePath, record);
+  }
+  if (record.activeVersion !== undefined && record.activeVersion !== 'editorial') {
+    throw new Error(`Unknown active review version for question ${id}: ${record.activeVersion}`);
+  }
+  if (record.activeVersion === 'editorial') {
+    const originalPrompt = record.originalPrompt;
+    const verifiedOriginalStatuses = new Set(['resolved', 'confirmed']);
+    const unscorableOriginalStatuses = new Set(['underdetermined', 'source_data_missing', 'source_prompt_incomplete', 'genuine_multi_answer', 'official_self_contradiction', 'transcription_error']);
+    const originalIsScorable = originalPrompt?.usable === true
+      && verifiedOriginalStatuses.has(originalPrompt.status)
+      && ['A', 'B', 'C', 'D'].includes(originalPrompt.answer);
+    const originalIsUnscorable = originalPrompt?.usable === false
+      && unscorableOriginalStatuses.has(originalPrompt.status)
+      && originalPrompt.answer === null;
+    const hasEditorialMarker = (value) => typeof value === 'string'
+      && (/【(?:编辑|编者|修订|校订|明确判断目标|补充资料)/u.test(value) || /review[-_]edited\.(?:png|jpe?g|webp)/i.test(value));
+    const hasMarkedStem = hasEditorialMarker(record.correctedStem);
+    const hasRevisedOptions = Array.isArray(record.correctedOptions)
+      && record.correctedOptions.length >= 2 && record.correctedOptions.length <= 4;
+    const hasRevisedMaterial = hasEditorialMarker(record.correctedMaterial);
+    if (!originalPrompt || typeof originalPrompt !== 'object'
+      || (!originalIsScorable && !originalIsUnscorable)
+      || !Array.isArray(originalPrompt.reportedAnswers)
+      || originalPrompt.reportedAnswers.some((answer) => !['A', 'B', 'C', 'D'].includes(answer))
+      || (!hasMarkedStem && !hasRevisedOptions && !hasRevisedMaterial)) {
+      throw new Error(`Editorial review version must preserve the original scoreability state and clearly mark at least one edited field: ${id}`);
+    }
+  }
+  const materialPath = evidence.reviewedMaterialPath;
+  const materialSha = evidence.reviewedMaterialBlobSha;
+  const materialSize = evidence.reviewedMaterialSize;
+  const materialSourceSha = evidence.materialSourceBlobSha;
+  const materialSourceSize = evidence.materialSourceSize;
+  const hasReviewedMaterial = [materialPath, materialSha, materialSize, materialSourceSha, materialSourceSize].some((value) => value !== undefined);
+  if (hasReviewedMaterial) {
+    if (typeof materialPath !== 'string' || !materialPath.startsWith('15-材料/')
+      || typeof materialSha !== 'string' || !/^[0-9a-f]{40}$/.test(materialSha)
+      || !Number.isSafeInteger(materialSize) || materialSize < 0
+      || typeof materialSourceSha !== 'string' || !/^[0-9a-f]{40}$/.test(materialSourceSha)
+      || !Number.isSafeInteger(materialSourceSize) || materialSourceSize < 0) {
+      throw new Error(`Invalid reviewed-material digest metadata for question ${id}. Refusing to overwrite output.`);
+    }
+    const materialMeta = sourceMaterialMetaByPath.get(materialPath);
+    if (materialMeta?.sha !== materialSourceSha || materialMeta?.size !== materialSourceSize) {
+      throw new Error(`Reviewed material does not retain its pinned source provenance: ${materialPath}. Refusing to overwrite output.`);
+    }
+    const previous = reviewedMaterialsByPath.get(materialPath);
+    const current = { sha: materialSha, size: materialSize, sourceSha: materialSourceSha, sourceSize: materialSourceSize };
+    if (previous && JSON.stringify(previous) !== JSON.stringify(current)) {
+      throw new Error(`Conflicting reviewed-material digests for ${materialPath}. Refusing to overwrite output.`);
+    }
+    reviewedMaterialsByPath.set(materialPath, current);
+  }
+}
 for (const file of sourceFiles) {
-  const bytes = originalQuestionBytes(file), meta = sourceMetaByPath.get(relSource(file));
+  const rel = relSource(file);
+  const bytes = originalQuestionBytes(file), meta = sourceMetaByPath.get(rel);
   const sha = crypto.createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
-  if (meta?.size !== bytes.length || meta?.sha !== sha) throw new Error(`Source differs from pinned Git blob: ${relSource(file)}. Refusing to overwrite output.`);
+  const review = reviewsBySourcePath.get(rel);
+  const reviewedSha = review?.evidence?.reviewedNoteBlobSha;
+  const reviewedSize = review?.evidence?.reviewedNoteSize;
+  const hasReviewedDigest = reviewedSha !== undefined || reviewedSize !== undefined;
+  if (hasReviewedDigest && (typeof reviewedSha !== 'string' || !/^[0-9a-f]{40}$/.test(reviewedSha) || !Number.isSafeInteger(reviewedSize) || reviewedSize < 0)) {
+    throw new Error(`Invalid reviewed-note digest metadata for ${rel}. Refusing to overwrite output.`);
+  }
+  const expectedSha = hasReviewedDigest ? reviewedSha : meta?.sha;
+  const expectedSize = hasReviewedDigest ? reviewedSize : meta?.size;
+  if (expectedSize !== bytes.length || expectedSha !== sha) throw new Error(`Source note differs from its pinned or reviewed Git blob: ${rel}. Refusing to overwrite output.`);
 }
 for (const file of sourceMaterialFiles) {
-  const bytes = fs.readFileSync(file), meta = sourceMaterialMetaByPath.get(relSource(file));
+  const rel = relSource(file);
+  const bytes = fs.readFileSync(file), meta = sourceMaterialMetaByPath.get(rel);
   const sha = crypto.createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
-  if (meta?.size !== bytes.length || meta?.sha !== sha) throw new Error(`Source material differs from pinned Git blob: ${relSource(file)}. Refusing to overwrite output.`);
+  const reviewed = reviewedMaterialsByPath.get(rel);
+  const expectedSha = reviewed?.sha ?? meta?.sha;
+  const expectedSize = reviewed?.size ?? meta?.size;
+  if (expectedSize !== bytes.length || expectedSha !== sha) throw new Error(`Source material differs from its pinned or reviewed Git blob: ${rel}. Refusing to overwrite output.`);
 }
 const commit = getCommit();
 if (!commit) throw new Error('Cannot resolve source Git commit; refusing to create non-pinned source links.');
@@ -248,17 +344,6 @@ if (sourceReviewCommit) {
   if (dirty.trim()) throw new Error('Review imports require a clean source checkout so SOURCE_REVIEW_COMMIT identifies the imported ledger and notes.');
 }
 const suspectIds = suspectIdsFromNotes();
-const reviewPath = path.join(sourceRoot, '31-复核记录', '复核记录.jsonl');
-const reviewRecords = fs.existsSync(reviewPath)
-  ? fs.readFileSync(reviewPath, 'utf8').split(/\r?\n/).filter((line) => line.trim()).map((line) => JSON.parse(line))
-  : [];
-const reviewsById = new Map();
-for (const record of reviewRecords) {
-  const id = String(record.id ?? '');
-  if (!/^\d{4,}$/.test(id)) throw new Error(`Invalid review record ID: ${id || '(empty)'}`);
-  if (reviewsById.has(id)) throw new Error(`Duplicate review record ID: ${id}`);
-  reviewsById.set(id, record);
-}
 const questions = [];
 const excluded = { missing_id: 0, missing_stem: 0, fewer_than_four_options: 0, ambiguous_or_missing_answer: 0, explicitly_flagged_suspect: 0, missing_explanation: 0, errors: 0 };
 const moduleCounts = {};
@@ -418,7 +503,9 @@ fs.writeFileSync(path.join(dataRoot, 'questions.json'), `${JSON.stringify({ file
 fs.writeFileSync(path.join(dataRoot, 'source-index.json'), `${JSON.stringify(sourceIndex, null, 2)}\n`, 'utf8');
 fs.writeFileSync(path.join(dataRoot, 'source-material-index.json'), `${JSON.stringify(sourceMaterialIndex, null, 2)}\n`, 'utf8');
 const answerReviewFile = '/data/answer-reviews.json';
-fs.writeFileSync(path.join(dataRoot, 'answer-reviews.json'), `${JSON.stringify(reviewRecords)}\n`, 'utf8');
+const answerReviewBytes = Buffer.from(`${JSON.stringify(reviewRecords)}\n`, 'utf8');
+fs.writeFileSync(path.join(dataRoot, 'answer-reviews.json'), answerReviewBytes);
+const answerReviewSha256 = crypto.createHash('sha256').update(answerReviewBytes).digest('hex');
 const effectiveQualityFlagCounts = {};
 for (const q of effectiveQuestions) for (const flag of q.qualityFlags ?? []) effectiveQualityFlagCounts[flag] = (effectiveQualityFlagCounts[flag] ?? 0) + 1;
 const reviewStatusCounts = {};
@@ -426,7 +513,9 @@ for (const review of reviewRecords) reviewStatusCounts[review.status] = (reviewS
 const manifest = {
   generatedAt: new Date().toISOString(),
   sourceRepository: repo,
-  sourceCommit: commit,
+  // Keep sourceCommit as the immutable question-content revision for existing
+  // consumers; sourceReviewCommit identifies the checkout containing the audit.
+  sourceCommit: questionContentCommit,
   questionContentCommit,
   ...(sourceReviewCommit ? { sourceReviewCommit } : {}),
   sourceLicense: {
@@ -437,6 +526,7 @@ const manifest = {
   counts: { total: questions.length, usable: effectiveQuestions.filter((q) => q.usable).length, reviewRequired: effectiveQuestions.filter((q) => !q.usable).length, reviewed: reviewRecords.length, reviewStatusCounts, modules: effectiveModuleCounts, categories: effectiveCategoryCounts, years: yearCounts, sourceQuestionFiles: sourceFiles.length, expectedSourceQuestionFiles: 11282, sourceMaterialFiles: sourceMaterialFiles.length, expectedSourceMaterialFiles: 717, questionsWithLinkedMaterial: questions.filter((q) => q.materialSourcePath).length },
   questionFiles,
   answerReviewFile,
+  answerReviewSha256,
   sourceCoverage: { expected: 11282, imported: sourceFiles.length, complete: sourceFiles.length === 11282 },
   sourceMaterialCoverage: { expected: 717, imported: sourceMaterialFiles.length, complete: sourceMaterialFiles.length === 717, linkedQuestions: questions.filter((q) => q.materialSourcePath).length },
   sourceImagesMissing: [...missingSourceImages].sort(),

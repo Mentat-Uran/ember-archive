@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-10-19T14:45:48.747Z",
+  "generatedAt": "2026-10-19T21:55:10.312Z",
   "sourceRepository": "https://github.com/Mentat-Uran/kaogongzhentizhengliu",
-  "sourceCommit": "53f5a6bc7d9b1312a37edb71d605dfee9eedd431",
+  "sourceCommit": "84ab93d4b64b61d897bece8a1c0a5bab06b4feb2",
   "questionContentCommit": "84ab93d4b64b61d897bece8a1c0a5bab06b4feb2",
-  "sourceReviewCommit": "53f5a6bc7d9b1312a37edb71d605dfee9eedd431",
+  "sourceReviewCommit": "85ddb479c12c13a3ddf4ad8f257e37ef0e38a654",
   "sourceLicense": {
     "annotations": "CC BY-NC 4.0 (as declared in the upstream README)",
     "examContentAndImages": "Upstream states copyright belongs to original exam institutions and platforms; no separate redistribution permission is asserted here.",
-    "licenseFile": "https://github.com/Mentat-Uran/kaogongzhentizhengliu/blob/53f5a6bc7d9b1312a37edb71d605dfee9eedd431/LICENSE"
+    "licenseFile": "https://github.com/Mentat-Uran/kaogongzhentizhengliu/blob/85ddb479c12c13a3ddf4ad8f257e37ef0e38a654/LICENSE"
   },
   "counts": {
     "total": 11282,
-    "usable": 11281,
-    "reviewRequired": 1,
-    "reviewed": 1596,
+    "usable": 11262,
+    "reviewRequired": 20,
+    "reviewed": 1597,
     "reviewStatusCounts": {
-      "confirmed": 614,
-      "resolved": 974,
-      "genuine_multi_answer": 7,
+      "confirmed": 605,
+      "resolved": 979,
+      "genuine_multi_answer": 12,
       "source_prompt_incomplete": 1
     },
     "modules": {
@@ -85,6 +85,7 @@
     "/data/questions-017.json"
   ],
   "answerReviewFile": "/data/answer-reviews.json",
+  "answerReviewSha256": "650b2c22de391203a69de1544d248cf288ee7e3829780fa1a4d9bb4ba2706203",
   "sourceCoverage": {
     "expected": 11282,
     "imported": 11282,
@@ -96,12 +97,11 @@
     "complete": true,
     "linkedQuestions": 3521
   },
-  "sourceImagesMissing": [
-    "90-图片/公式图/formula-2c7a9ff6774e3af2.png",
-    "90-图片/公式图/formula-4daf9a3762c10376.png"
-  ],
+  "sourceImagesMissing": [],
   "qualityFlags": {
-    "answer_not_scored": 1,
+    "conflicting_answer_evidence": 16,
+    "answer_not_scored": 17,
+    "missing_explanation": 6,
     "explicitly_flagged_suspect": 1,
     "missing_answer_evidence": 1
   },
