@@ -1,33 +1,42 @@
 {
-  "generatedAt": "2026-10-17T14:44:14.805Z",
+  "generatedAt": "2026-10-19T21:55:10.312Z",
   "sourceRepository": "https://github.com/Mentat-Uran/kaogongzhentizhengliu",
   "sourceCommit": "84ab93d4b64b61d897bece8a1c0a5bab06b4feb2",
+  "questionContentCommit": "84ab93d4b64b61d897bece8a1c0a5bab06b4feb2",
+  "sourceReviewCommit": "85ddb479c12c13a3ddf4ad8f257e37ef0e38a654",
   "sourceLicense": {
     "annotations": "CC BY-NC 4.0 (as declared in the upstream README)",
     "examContentAndImages": "Upstream states copyright belongs to original exam institutions and platforms; no separate redistribution permission is asserted here.",
-    "licenseFile": "https://github.com/Mentat-Uran/kaogongzhentizhengliu/blob/84ab93d4b64b61d897bece8a1c0a5bab06b4feb2/LICENSE"
+    "licenseFile": "https://github.com/Mentat-Uran/kaogongzhentizhengliu/blob/85ddb479c12c13a3ddf4ad8f257e37ef0e38a654/LICENSE"
   },
   "counts": {
     "total": 11282,
-    "usable": 9690,
-    "reviewRequired": 1592,
+    "usable": 11262,
+    "reviewRequired": 20,
+    "reviewed": 1597,
+    "reviewStatusCounts": {
+      "confirmed": 605,
+      "resolved": 979,
+      "genuine_multi_answer": 12,
+      "source_prompt_incomplete": 1
+    },
     "modules": {
-      "判断推理": 7713,
-      "资料分析": 3569
+      "判断推理": 7714,
+      "资料分析": 3568
     },
     "categories": {
-      "图形推理": 1880,
       "定义判断": 1598,
       "科学推理": 130,
-      "类比推理": 1630,
+      "类比推理": 1631,
       "逻辑判断": 2475,
+      "图形推理": 1880,
       "倍数": 168,
-      "其他": 273,
-      "基期计算（增长类）": 1,
-      "增长": 1300,
-      "平均数": 319,
       "比重": 840,
-      "综合": 668
+      "基期计算（增长类）": 1,
+      "平均数": 319,
+      "其他": 273,
+      "增长": 1300,
+      "综合": 667
     },
     "years": {
       "2008": 7,
@@ -53,7 +62,8 @@
     "sourceQuestionFiles": 11282,
     "expectedSourceQuestionFiles": 11282,
     "sourceMaterialFiles": 717,
-    "expectedSourceMaterialFiles": 717
+    "expectedSourceMaterialFiles": 717,
+    "questionsWithLinkedMaterial": 3521
   },
   "questionFiles": [
     "/data/questions-001.json",
@@ -74,22 +84,27 @@
     "/data/questions-016.json",
     "/data/questions-017.json"
   ],
+  "answerReviewFile": "/data/answer-reviews.json",
+  "answerReviewSha256": "650b2c22de391203a69de1544d248cf288ee7e3829780fa1a4d9bb4ba2706203",
   "sourceCoverage": {
     "expected": 11282,
     "imported": 11282,
     "complete": true
   },
-  "sourceImagesMissing": [
-    "90-图片/公式图/formula-4daf9a3762c10376.png",
-    "90-图片/公式图/formula-2c7a9ff6774e3af2.png"
-  ],
+  "sourceMaterialCoverage": {
+    "expected": 717,
+    "imported": 717,
+    "complete": true,
+    "linkedQuestions": 3521
+  },
+  "sourceImagesMissing": [],
   "qualityFlags": {
-    "conflicting_answer_evidence": 62,
-    "answer_not_scored": 62,
-    "explicitly_flagged_suspect": 1571,
-    "options_not_exactly_four": 1,
-    "missing_source_image": 2
+    "conflicting_answer_evidence": 16,
+    "answer_not_scored": 17,
+    "missing_explanation": 6,
+    "explicitly_flagged_suspect": 1,
+    "missing_answer_evidence": 1
   },
   "legacyImporterErrors": 0,
-  "importer": "outputs/wanjuan/scripts/import-questions.mjs"
+  "importer": "scripts/import-questions.mjs"
 }
