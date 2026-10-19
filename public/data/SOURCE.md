@@ -1,9 +1,13 @@
-# 题库来源与许可
+# 题库来源、复核与许可
 
-题目数据由 [Mentat-Uran/kaogongzhentizhengliu](https://github.com/Mentat-Uran/kaogongzhentizhengliu) 仓库的逐题笔记导入。导入版本的完整 Git commit、每条记录的源文件路径、Git blob SHA-1、源文件大小和固定 GitHub 链接见同目录 `manifest.json`、`source-index.json` 与题目对象中的 `sourcePath`、`sourceSha`、`sourceSize`、`sourceUrl`。
+本作题目导入自 [Mentat-Uran/kaogongzhentizhengliu](https://github.com/Mentat-Uran/kaogongzhentizhengliu)。原题内容与图片以固定内容 commit `84ab93d4b64b61d897bece8a1c0a5bab06b4feb2` 为准；每题的 Markdown 路径、blob SHA-1、源文件大小和固定链接记录在 `manifest.json`、`source-index.json` 与题目对象中。
 
-该仓库 README 声明：仓库自行创作的标注和分类部分采用 [Creative Commons BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) 许可；真题题干、选项、材料原文和配图的著作权归原出题机构及原题库平台所有，并说明仅供个人学习交流。此处仅记录上游声明，不代表另行获得题干、材料或图片的授权。上游 `LICENSE` 文件的具体内容和链接随导入版本一并核查。
+上游另有 717 篇独立材料页，供 3,521 道题引用。导入器会逐篇核对固定版本的 Git blob，并核验每个题目材料链接都能解析；材料路径、blob SHA-1、文件大小及固定链接保存在题目对象和 `source-material-index.json`。材料缺失、来源校验不符或链接无法解析时，导入器会停止发布。
 
-本项目导入了固定版本下全部 11,282 条题目笔记，并保留上游解析原文及题目来源，以便追溯。上游说明解析由程序批量生成并经人工抽检，可能存在错漏；本项目导入不对答案或解析作事实背书，也不改写解析。缺少明确答案、选项数不足、缺图或上游标为疑点复核的题目仍可查阅，但在题目对象中设为 `usable: false` 并记录 `qualityFlags`，不应进入自动判分练习。题目索引与分片清单见 `questions.json` 和 `manifest.json`。
+在该内容快照上，源仓库另行增加了逐题复核记录。导入器会识别并剥离每篇已复核题目笔记末尾的独立复核附录，再对原始题目内容按固定 commit 的 blob SHA-1 校验。因此复核说明不会混入题干、选项、材料或原始解析，也不会改变原题配图路径。
 
-如题目权利人提出异议，应停止分发相关题目和图片并按权利人要求处理。使用者应核对来源、适用许可及当地法律要求。
+本次独立复核覆盖 1,596 道题，另以 `/data/answer-reviews.json` 发布结构化复核覆盖层。应用显示适用的题面、复核状态、修订解析、相关考点、成立选项与核对依据；原题解析仍保存在题目数据中，需隐藏的记录会按复核标记处理。记录中 1,588 道题核定为唯一答案，7 道保留多个可成立答案并按多答案判分，1 道设为 `answer: null`、`usable: false` 并留待人工复核。q12118354 缺题干所问图数和D图；公开财政数据只能核验现存A-C中的趋势，不能排除缺失D也匹配，因此不推定原题答案。q17900893 依据可追溯的同题材料恢复为明确标记的编辑版B，原始选项逐字内容仍未核实。q2393952 已依据题源公式图改正为D；q464887 的误分类已改为判断推理/类比推理。全量题库共 11,281 道可判分、1 道待补原始资料；最终数量见 `manifest.json`。
+
+上游 README 声明：仓库自行创作的标注与分类采用 [Creative Commons BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)；真题题干、选项、材料与图片的著作权归原出题机构及原题库平台。这里仅复述上游声明，不代表另行取得真题或图片的再分发许可。新增复核意见与原题内容分别记录，不把许可范围延伸到真题内容或图片。
+
+若题目权利人提出异议，应停止分发相关题目和图片并按权利人要求处理。使用者应自行核对来源、适用许可及当地法律要求。

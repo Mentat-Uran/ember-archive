@@ -32,15 +32,17 @@ npm run verify:build
 
 ## 题目来源
 
-仅使用 [Mentat-Uran/kaogongzhentizhengliu](https://github.com/Mentat-Uran/kaogongzhentizhengliu)，固定源版本与实际收录统计见 `public/data/manifest.json`；全量收录固定版本的 11,282 道原题：判断推理 7,713 道、资料分析 3,569 道。其中 9,690 道可判分、1,592 道保留为待复核。上游固定版本仅含这两个模块，不虚构其他模块题目。
+仅使用 [Mentat-Uran/kaogongzhentizhengliu](https://github.com/Mentat-Uran/kaogongzhentizhengliu)，固定题目内容版本、复核账本版本与实际导入统计见 `public/data/manifest.json`；全量收录 11,282 道题。1,596 道题已有独立复核记录，1,588 道核定为唯一答案、7 道保留多个可成立答案并按多答案评分，1 道因原题所需图示缺失而留空、不计分。q12118354 缺题干所问图数和D图原件，不能从现存A-C唯一判定；q17900893 已根据同题图恢复选项并明确标为编辑版B。其余题目沿用固定题源中已有答案。答题后会显示适用的题面、独立复核解析、相关信息和核对依据。上游固定版本仅含这两个模块，不虚构其他模块题目。
 
-题干、四个选项、正确答案、材料、原始解析及引用配图随题保存；每题携带对应 commit 的 GitHub 链接。原库疑点、答案不唯一、选项或解析缺失的记录保留为待复核题，可查阅原文，不进入正常战斗或准确率统计。复现导入：
+题干、四个选项、正确答案、材料、原始解析及引用配图随题保存；每题携带对应内容 commit 的 GitHub 链接。3,521 道题引用源仓独立材料页，导入时对全部 717 篇材料逐篇核验固定版本 blob，并在题目对象中记录材料来源路径、SHA 和链接。复核覆盖层保留原始题源并单独标记编辑版题干、修订解析、相关信息和证据；只有仍缺必要资料的题目不进入正常战斗或准确率统计。复现当前源仓复核版本的导入：
 
 ```bash
 git clone --config core.autocrlf=false https://github.com/Mentat-Uran/kaogongzhentizhengliu source-vault
-git -C source-vault checkout 84ab93d4b64b61d897bece8a1c0a5bab06b4feb2
-node scripts/import-questions.mjs source-vault public
+SOURCE_REVIEW_COMMIT="$(git -C source-vault rev-parse HEAD)" \
+  node scripts/import-questions.mjs source-vault public
 ```
+
+导入器会记录源仓当前完整题目内容版本与复核账本版本，并要求复核导入使用干净 checkout；题目原始 Markdown 和材料仍按固定内容 commit 的 Git blob 逐条校验。
 
 详细来源与许可见 `public/data/SOURCE.md` 和上游 LICENSE。上游自行创作的标注与分类采用 CC BY-NC 4.0；真题题干、选项、材料和配图权利仍归原出题机构及原平台。供非商业个人学习交流。原库解析由程序生成并人工抽检，可能有错漏，游戏保留原文，不将游戏奖励视为答案正确性的独立验证。
 
