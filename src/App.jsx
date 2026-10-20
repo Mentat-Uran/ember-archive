@@ -7,12 +7,12 @@ import {CLASSES,CARDS,RELICS,ENEMIES,UPGRADES,ACHIEVEMENTS,STANCES} from './cont
 import {setAudio,sfx} from './audio.js';
 import {loadSnapshot,saveSnapshot} from './storage.js';
 import {decodeQuestionData} from './data-codec.js';
+import {ANSWER_LETTERS as letters,applyQuestionReviews,answerIndices,hasScorableAnswer,answerLabel,selectedLabel,answerMatches,isEligibleQuestion} from '../packages/question-core/index.js';
 
 const LibraryView=React.lazy(()=>import('./Learning.jsx').then(m=>({default:m.LibraryView})));
 const StatsView=React.lazy(()=>import('./Learning.jsx').then(m=>({default:m.StatsView})));
 const STORE='ember-archive-v1';
 const find=(arr,id)=>arr.find(x=>x.id===id);
-const letters=['A','B','C','D'];
 const actNames=['灰烬回廊','沉默书库','无明王座'];
 const icons={Swords,Flame,Shield,BookOpen,Heart,Star,Gem,Eye};
 const nodeMeta={combat:{icon:Swords,name:'迷失者',note:'战胜守卫，获得钱币和一张新招式。'},elite:{icon:Skull,name:'精英试炼',note:'更危险的敌人，更丰厚的奖励。慎重衡量生命与构筑。'},boss:{icon:Castle,name:'关底守卫',note:'击败本区域的守卫，深入下一重遗迹。'},rest:{icon:Flame,name:'余烬营地',note:'恢复生命、强化一张招式，或精简你的牌组。'},shop:{icon:ShoppingBag,name:'流浪商人',note:'用钱币购买招式与遗物，或者移除一张牌。'},event:{icon:ScrollText,name:'遗迹回声',note:'旧时代的残响仍在石壁间徘徊。你的选择将改变此行。'},treasure:{icon:Gem,name:'封存遗物',note:'一件失落遗物静候新的主人。'}};
@@ -24,27 +24,6 @@ function Mark({size=28}){return <span className="brand-mark" style={{width:size,
 function Modal({title,children,onClose,wide=false}){const ref=useRef();useEffect(()=>{const prev=document.activeElement;ref.current?.focus();const close=e=>{if(e.key==='Escape')onClose();if(e.key==='Tab'){const els=ref.current?.querySelectorAll('button:not(:disabled),input,select,a[href],summary');if(!els?.length)return;const first=els[0],last=els[els.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}};window.addEventListener('keydown',close);return()=>{window.removeEventListener('keydown',close);prev?.focus?.();};},[]);return <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><section ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title} className={`modal ${wide?'wide':''}`}><div className="modal-title"><h2>{title}</h2><button className="icon-button" onClick={onClose} aria-label="关闭"><X/></button></div>{children}</section></div>;}
 function Markdown({text,onImage}){return <ReactMarkdown remarkPlugins={[remarkGfm]} components={{img:({src,alt})=><img src={src} alt={alt||'原题配图'} loading="lazy" onClick={()=>onImage?.(src)}/>,a:({href,children})=><a href={href} target="_blank" rel="noreferrer">{children}</a>}}>{String(text||'')}</ReactMarkdown>;}
 const reviewStatusNames={resolved:'答案与解析已核定',confirmed:'答案已复核',underdetermined:'题面不足以唯一判定',source_data_missing:'缺少必要原始资料',source_prompt_incomplete:'题干或选项不完整',transcription_error:'题源转录有误',genuine_multi_answer:'存在多个合理答案',official_self_contradiction:'官方答案或解析与复算冲突',extractor_false_positive:'原疑点为索引误标'};
-function applyQuestionReviews(questions,records){
- const byId=new Map((records||[]).map(r=>[String(r.id),r]));
- return questions.map(q=>{
- const review=byId.get(String(q.sourceId??q.id));
-  if(!review)return q;
-  const flags=new Set(q.qualityFlags||[]);
-  for(const flag of review.clearQualityFlags||[])flags.delete(flag);
-  for(const flag of review.qualityFlags||[])flags.add(flag);
-  const acceptedAnswers=Array.isArray(review.acceptedAnswers)?[...new Set(review.acceptedAnswers.filter(a=>['A','B','C','D'].includes(a)).map(a=>'ABCD'.indexOf(a)))]:[];
-  const answer=review.answer===null?null:typeof review.answer==='string'&&['A','B','C','D'].includes(review.answer)?'ABCD'.indexOf(review.answer):q.answer;
-  const options=Array.isArray(review.correctedOptions)&&review.correctedOptions.length>=2&&review.correctedOptions.length<=4?review.correctedOptions:q.options;
-  const stem=typeof review.correctedStem==='string'?review.correctedStem:q.stem;
-  const material=typeof review.correctedMaterial==='string'?review.correctedMaterial:q.material;
-  return {...q,answer,...(acceptedAnswers.length>1?{correctAnswers:acceptedAnswers}:{}),stem,options,material,category:review.correctedCategory||q.category,module:review.correctedModule||q.module,topic:review.correctedTopic||q.topic,year:review.correctedYear||q.year,exam:review.correctedExam||q.exam,qualityFlags:[...flags],usable:review.usable===true&&flags.size===0,review};
- });
-}
-const answerIndices=q=>Array.isArray(q?.correctAnswers)&&q.correctAnswers.length?q.correctAnswers:Number.isInteger(q?.answer)?[q.answer]:[];
-const hasScorableAnswer=q=>answerIndices(q).length>0;
-const answerLabel=q=>answerIndices(q).map(i=>letters[i]).join('、')||'无唯一标准答案';
-const selectedLabel=selected=>(Array.isArray(selected)?selected:[selected]).filter(Number.isInteger).map(i=>letters[i]).join('、');
-const answerMatches=(q,selected)=>{const expected=answerIndices(q),actual=[...new Set(Array.isArray(selected)?selected:[selected])].filter(Number.isInteger);return expected.length>0&&actual.length===expected.length&&expected.every(i=>actual.includes(i));};
 function ReviewPanel({q,onImage}){
  const r=q?.review;if(!r)return null;
  const status=reviewStatusNames[r.status]||'复核记录';
@@ -123,7 +102,7 @@ export default function App(){
  useEffect(()=>{let alive=true;loadSnapshot(initial.current).then(data=>{if(!alive)return;if(data){setProfile(data.profile);setRun(data.run||null);setSettings(data.settings||{sound:false,motion:true});setLearning(data.learning||{});setStudyLog(data.studyLog||[]);}setStorageReady(true);});return()=>{alive=false;};},[]);
  useEffect(()=>{if(!storageReady)return;saveSnapshot({version:1,profile,run,settings,learning,studyLog}).then(ok=>{if(!ok)notify('设备储存空间不足，请导出存档备份。');});},[storageReady,profile,run,settings,learning,studyLog]);
  useEffect(()=>{setAudio(settings.sound);document.documentElement.dataset.motion=settings.motion?'on':'off';},[settings]);
- useEffect(()=>{if(run?.state==='battle'&&run.battle?.phase==='question'&&!run.uiQuestionId&&questions.length){const copy=structuredClone(run);const used=new Set(run.answers.map(a=>a.questionId));const valid=questions.filter(q=>q.usable!==false&&hasScorableAnswer(q)&&q.options.length>=2);let pool=valid.filter(q=>!used.has(q.id));if(!pool.length)pool=valid;if(!pool.length)return;const categoryPool=pool.filter(q=>run.uiCategory?q.category===run.uiCategory:run.act===1?(/类比|定义/.test(q.category)):true);if(categoryPool.length)pool=categoryPool;const random=Engine.rng(`${run.seed}-${run.answers.length}-${run.uiCategory||''}`);const unseen=pool.filter(q=>!learning[q.id]||learning[q.id].correct<learning[q.id].attempts);const q=random.pick(unseen.length?unseen:pool);copy.uiQuestionId=q.id;Engine.selectQuestion(copy,q.id);startTime.current=Date.now();setRun(copy);}},[run,questions]);
+ useEffect(()=>{if(run?.state==='battle'&&run.battle?.phase==='question'&&!run.uiQuestionId&&questions.length){const copy=structuredClone(run);const used=new Set(run.answers.map(a=>a.questionId));const valid=questions.filter(q=>isEligibleQuestion(q));let pool=valid.filter(q=>!used.has(q.id));if(!pool.length)pool=valid;if(!pool.length)return;const categoryPool=pool.filter(q=>run.uiCategory?q.category===run.uiCategory:run.act===1?(/类比|定义/.test(q.category)):true);if(categoryPool.length)pool=categoryPool;const random=Engine.rng(`${run.seed}-${run.answers.length}-${run.uiCategory||''}`);const unseen=pool.filter(q=>!learning[q.id]||learning[q.id].correct<learning[q.id].attempts);const q=random.pick(unseen.length?unseen:pool);copy.uiQuestionId=q.id;Engine.selectQuestion(copy,q.id);startTime.current=Date.now();setRun(copy);}},[run,questions]);
  useEffect(()=>{if(run&&['victory','defeat'].includes(run.state)&&!run.settled){const r=structuredClone(run),p=structuredClone(profile);Engine.settleRun(r,p);setRun(r);setProfile(p);sfx('reward');}},[run]);
  const mutate=(fn,...args)=>{if(!run)return;const r=structuredClone(run);fn(r,...args);setRun(r);return r;};
  const act=(fn,...args)=>{const r=mutate(fn,...args);sfx('click');if(r){const newer=r.achievements.filter(id=>!run.achievements.includes(id));if(newer.length)notify(`铭记达成：${find(ACHIEVEMENTS,newer[0])?.name}`);}if(r&&r.state!==run.state){setFeedback(null);setTarget(0);if(r.state==='reward'||r.state==='treasure')sfx('reward');}return r;};
